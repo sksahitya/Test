@@ -1,3 +1,6 @@
+const contractName = 'MyContract';
+const contractSource = ''
+
 const fs = require('fs');
 const solc = require('solc');
 const ethers = require('ethers')
@@ -7,8 +10,8 @@ account = account.connect(provider)
 const input = JSON.stringify({
     language: 'Solidity',
     sources: {
-        'CasinoCoin': {
-            content: fs.readFileSync('./contracts/casino-coin.sol', 'utf8'),
+        [contractName]: {
+            content: fs.readFileSync(contractSource, 'utf8'),
         },
     },
     settings: {
@@ -21,9 +24,9 @@ const input = JSON.stringify({
 });
 const output = JSON.parse(solc.compile(input));
 const { contracts } = output;
-const { CasinoCoin } = contracts;
-const abi = CasinoCoin.Coin.abi;
-const bytecode = CasinoCoin.Coin.evm.bytecode.object;
+const encodedContract = contracts[contractName];
+const abi = encodedContract[contractName].abi;
+const bytecode = encodedContract[contractName].evm.bytecode.object;
 const factory = new ethers.ContractFactory(abi, bytecode).connect(account)
 const constructorArguments = []
 !(async () => {
