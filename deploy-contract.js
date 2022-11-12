@@ -35,6 +35,14 @@ const constructorArguments = []
     contract.deployTransaction.wait().then(() => {
         console.log('SUCCESSFULLY DEPLOYED NEW CONTRACT AT:', contract.address)
         console.log('TRANSACTION FOR THE DEPLOYMENT', contract.deployTransaction.hash)
+        fs.writeFile('./contract-byte-code.txt', bytecode, (err) => {
+            if (err) return console.log(err);
+            console.log('Bytecode saved!');
+        })
+        fs.writeFile('./contract-abi.json', JSON.stringify(abi), (err) => {
+            if (err) return console.log(err);
+            console.log('ABI saved!');
+        })
     }).catch(e => {
         console.log(e)
     })
