@@ -20,21 +20,22 @@ const input = JSON.stringify({
     },
 });
 const output = JSON.parse(solc.compile(input));
-const {contracts} = output;
-const {CasinoCoin} = contracts;
+const { contracts } = output;
+const { CasinoCoin } = contracts;
 const abi = CasinoCoin.Coin.abi;
 const bytecode = CasinoCoin.Coin.evm.bytecode.object;
 const factory = new ethers.ContractFactory(abi, bytecode).connect(account)
 const constructorArguments = []
 !(async () => {
-    const {gasLimit, gasPrice} = await provider.getBlock('latest').then(block => ({gasLimit: block.gasLimit, gasPrice: block.baseFeePerGas}))
+    const { gasPrice } = await provider.getBlock('latest').then(block => ({ gasLimit: block.gasLimit, gasPrice: block.baseFeePerGas }))
     const balance = await provider.getBalance(account.address)
     const estimate = await account.estimateGas(factory.getDeployTransaction(...constructorArguments))
-    console.log('balance', balance.toString(), 'estimate', estimate.toString())
-    const contract = await factory.deploy(...constructorArguments, {gasPrice})
-    console.log(contract.address)
-    console.log(contract.deployTransaction.hash)
+    console.log('balance', balance.toString(), 'estimated gas', estimate.toString())
+    const contract = await factory.deploy(...constructorArguments, { gasPrice })
     contract.deployTransaction.wait().then(() => {
-        console.log(contract.address)
+        console.log('SUCCESSFULLY DEPLOYED NEW CONTRACT AT:', contract.address)
+        console.log('TRANSACTION FOR THE DEPLOYMENT', contract.deployTransaction.hash)
+    }).catch(e => {
+        console.log(e)
     })
 })();
