@@ -1,0 +1,6 @@
+{
+    "PORT": 3336,
+    "HOST": "testing.samwagnermedia.com",
+    "UPLOADAUTH": "Easy",
+    "static": "./static"
+}
