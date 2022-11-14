@@ -12,13 +12,13 @@ contract BlackJack is Game {
     uint16 totalCards = uint16(numberOfDecks * cardSuits.length * cardNumbers.length);
     uint256 seedsViewed;
 
-    Card[] dealtCards;
+    mapping(uint8 => mapping(uint8 => uint8)) dealtCards;
     Player[] public players;
     Dealer dealer;
 
     struct Card {
         uint8 suit;
-        uint16 number;
+        uint8 number;
     }
     
     struct Player {
@@ -91,9 +91,21 @@ contract BlackJack is Game {
         return uint8((randomSeed() % 4) + 1);
     }
 
+    function notDealt(uint8 _number, uint8 _suit) internal view returns (bool) {
+        return dealtCards[_number][_suit] < numberOfDecks;
+    }
+
     function selectRandomCard() internal returns (Card memory card) {
         card.suit = randomSuit();
         card.number = randomCardNumber();
         return card;
+    }
+    
+    function nextCard() internal returns (Card memory card) {
+        if (totalCards < 1) revert("No more cards left in the deck.");
+        card = selectRandomCard();
+        while (!notDealt(card.number, card.suit)) card = selectRandomCard();
+        dealtCards[card.number][card.suit]++;
+        totalCards--;
     }
 }
