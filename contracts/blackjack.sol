@@ -11,7 +11,7 @@ contract BlackJack is Game {
     Card[] dealtCards;
     Player[] players;
     uint8 numberOfDecks = 6;
-    uint16 totalCards =uint16(numberOfDecks * cardSuits.length * cardNumbers.length);
+    uint16 totalCards = uint16(numberOfDecks * cardSuits.length * cardNumbers.length);
     uint256 seedsViewed;
 
     struct Card {
