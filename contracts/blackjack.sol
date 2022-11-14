@@ -8,11 +8,13 @@ contract BlackJack is Game {
 
     uint8[] cardNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     uint8[] cardSuits = [1, 2, 3, 4];
-    Card[] dealtCards;
-    Player[] players;
     uint8 numberOfDecks = 6;
     uint16 totalCards = uint16(numberOfDecks * cardSuits.length * cardNumbers.length);
     uint256 seedsViewed;
+
+    Card[] dealtCards;
+    Player[] public players;
+    Dealer dealer;
 
     struct Card {
         uint8 suit;
@@ -24,6 +26,40 @@ contract BlackJack is Game {
         uint48 bet;
         Card card1;
         Card card2;
+    }
+
+    struct Dealer {
+        Card card1;
+        Card card2;
+        bool revealed;
+    }
+
+    struct DealerView {
+        Card card1;
+        Card card2;
+    }
+
+    modifier noReentry {
+        bool isAtTable = false;
+        for (uint i = players.length - 1; i >= 0; i--) {
+            if (players[i].player == msg.sender) {
+                isAtTable = true;
+                break;
+            }
+        }
+        require(isAtTable, "You are already sitting at the table.");
+        _;
+    }
+
+    function joinTable() public onlyMembers noReentry {
+      
+    }
+
+    function viewDealersCards() public view returns (DealerView memory dealerCards) {
+        dealerCards.card1 = dealer.card1;
+        if (dealer.revealed) {
+            dealerCards.card2 = dealer.card2;
+        }
     }
 
     function randomSeed() internal returns (uint256) {

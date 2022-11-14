@@ -27,6 +27,18 @@ contract Casino {
         owner = payable(msg.sender);
     }
 
+    modifier noReentry {
+        bool alreadyMember = false;
+        for (uint i = members.length - 1; i >= 0; i--) {
+            if (members[i] == msg.sender) {
+                alreadyMember = true;
+                break;
+            }
+        }
+        require(alreadyMember, "You are already a member of the casino.");
+        _;
+    }
+
     modifier onlyMembers() {
         bool isAllowed = false;
         for (uint256 i = members.length - 1; i >= 0; i--) {
@@ -80,7 +92,7 @@ contract Casino {
         membershipFee = fee;
     }
 
-    function joinCasino() external payable {
+    function joinCasino() external payable noReentry {
         require(msg.value == membershipFee, "Must send membershipFee");
         owner.transfer(msg.value);
         members.push(msg.sender);
