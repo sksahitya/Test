@@ -108,4 +108,26 @@ contract BlackJack is Game {
         dealtCards[card.number][card.suit]++;
         totalCards--;
     }
+
+    function resetDeck() internal {
+        for (uint8 i = 0; i < cardNumbers.length; i++) {
+            for (uint8 j = 0; j < cardSuits.length; j++) {
+                dealtCards[cardNumbers[i]][cardSuits[j]] = 0;
+            }
+        }
+        totalCards = uint16(numberOfDecks * cardSuits.length * cardNumbers.length);
+    }
+
+    function dealCards() internal {
+        if (totalCards - (2 + players.length * 2) < 1) resetDeck();
+        dealer.revealed = false;
+        for (uint i = 0; i < players.length; i++) {
+            if (players[i].bet > 0) players[i].card1 = nextCard();
+        }
+        dealer.card1 = nextCard();
+        for (uint i = 0; i < players.length; i++) {
+            if (players[i].bet > 0) players[i].card2 = nextCard();
+        }
+        dealer.card2 = nextCard();
+    }
 }
