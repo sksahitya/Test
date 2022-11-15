@@ -9,8 +9,7 @@ contract BlackJack is Game {
     uint8[] cardNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     uint8[] cardSuits = [1, 2, 3, 4];
     uint8 numberOfDecks = 20;
-    uint16 totalCards =
-        uint16(numberOfDecks * cardSuits.length * cardNumbers.length);
+    uint16 totalCards = uint16(numberOfDecks * cardSuits.length * cardNumbers.length);
     uint16 numberOfCutCards = 40;
     uint256 seedsViewed;
     event DeckShuffled(uint16 cutCards, uint48 timestamp);
