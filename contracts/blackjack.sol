@@ -121,20 +121,26 @@ contract BlackJack is Game, Deck {
     }
 
     function leaveTable() public onlyPlayers {
+        if (players[msg.sender].bet > 0) playersBet--;
         players[msg.sender].atTable = false;
         for (uint256 i = 0; i < playerAddresses.length; i++) {
             if (playerAddresses[i] == msg.sender) {
                 delete playerAddresses[i];
             }
         }
-        uint8 playersBet;
-        for (uint256 i = 0; i < playerAddresses.length; i++) {
-            if (players[playerAddresses[i]].bet > 0) {
-                playersBet++;
+        if (actingPlayer == msg.sender) {
+            actingPlayer = address(0);
+            if (playersBet == playerAddresses.length) {
+                dealCards();
+            } else {
+                for (uint8 i = 0; i < playerAddresses.length; i++) {
+                    if (players[playerAddresses[i]].bet > 0 && !players[playerAddresses[i]].finishedActing) {
+                        actingPlayer = playerAddresses[i];
+                        break;
+                    }
+                }
+                if (actingPlayer == address(0)) dealCards();
             }
-        }
-        if (playersBet == playerAddresses.length) {
-            dealCards();
         }
         seedsViewed++;
     }
@@ -427,7 +433,8 @@ contract BlackJack is Game, Deck {
         for (uint256 i = 0; i < playerAddresses.length; i++) {
             if (players[playerAddresses[i]].bet > 0) {
                 uint8 cardTotal = playerCardsTotal(
-                    players[playerAddresses[i]].cards
+                    players[playerAddresses[i]].cards,
+                    0
                 );
                 if (dealerCardTotal > 21) {
                     uint48 winnings = players[playerAddresses[i]].bet * 2;
