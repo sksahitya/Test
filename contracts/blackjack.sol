@@ -55,16 +55,6 @@ contract BlackJack is Game, Deck {
         uint8 cardSuit1,
         uint8 cardSuit2
     );
-    uint48 bettingPeriod = 60 * 10;
-    uint48 lastHandTime;
-    address actingPlayer;
-    uint48 playerActionPeriod = 60 * 5;
-    uint48 lastPlayerActionTime;
-    uint8 playersBet;
-    mapping(address => Player) public players;
-    address[] public playerAddresses;
-    Dealer public dealer;
-    Card dealerUnrevealed;
 
     struct PlayerCard {
         Card card;
@@ -83,6 +73,20 @@ contract BlackJack is Game, Deck {
         Card[] cards;
         bool revealed;
     }
+
+    uint48 bettingPeriod = 60 * 10;
+    uint48 lastHandTime;
+    address actingPlayer;
+    uint48 playerActionPeriod = 60 * 5;
+    uint48 lastPlayerActionTime;
+    uint8 playersBet;
+
+    mapping(address => Player) public players;
+
+    address[] public playerAddresses;
+
+    Dealer public dealer;
+    Card dealerUnrevealed;
 
     modifier turnToAct() {
         require(
@@ -123,7 +127,7 @@ contract BlackJack is Game, Deck {
     function leaveTable() public onlyPlayers {
         if (players[msg.sender].bet > 0) playersBet--;
         players[msg.sender].atTable = false;
-        for (uint256 i = 0; i < playerAddresses.length; i++) {
+        for (uint i = 0; i < playerAddresses.length; i++) {
             if (playerAddresses[i] == msg.sender) {
                 delete playerAddresses[i];
             }
@@ -211,7 +215,7 @@ contract BlackJack is Game, Deck {
 
     function rotatePlaces() internal {
         address c = playerAddresses[0];
-        for (uint256 i = 0; i < playerAddresses.length - 1; i++) {
+        for (uint i = 0; i < playerAddresses.length - 1; i++) {
             playerAddresses[i] = i == playerAddresses.length - 1
                 ? c
                 : playerAddresses[i + 1];
@@ -225,7 +229,7 @@ contract BlackJack is Game, Deck {
         rotatePlaces();
         delete dealer.cards;
         dealer.revealed = false;
-        for (uint256 i = 0; i < playerAddresses.length; i++) {
+        for (uint i = 0; i < playerAddresses.length; i++) {
             delete players[playerAddresses[i]].cards;
             players[playerAddresses[i]].finishedActing = false;
             if (players[playerAddresses[i]].bet > 0) {
@@ -242,7 +246,7 @@ contract BlackJack is Game, Deck {
         }
         dealer.cards.push(nextCard());
         emit DealtDealerCard(dealer.cards[0].number, dealer.cards[0].suit);
-        for (uint256 i = 0; i < playerAddresses.length; i++) {
+        for (uint i = 0; i < playerAddresses.length; i++) {
             if (players[playerAddresses[i]].bet > 0) {
                 Card memory next = nextCard();
                 players[playerAddresses[i]].cards.push(
@@ -277,11 +281,11 @@ contract BlackJack is Game, Deck {
             );
             emit DealerBlackJack(uint48(block.timestamp));
         }
-        for (uint256 i; i < playerAddresses.length; i++) {
+        for (uint i; i < playerAddresses.length; i++) {
             if (players[playerAddresses[i]].bet > 0) {
                 uint8 cardTotal;
                 for (
-                    uint256 j = 0;
+                    uint j = 0;
                     j < players[playerAddresses[i]].cards.length;
                     j++
                 ) {
