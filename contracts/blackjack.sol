@@ -131,7 +131,7 @@ contract BlackJack is Game, Deck {
         if (actingPlayer == msg.sender) {
             actingPlayer = address(0);
             if (playersBet == playerAddresses.length) {
-                dealCards();
+                dealerTurn();
             } else {
                 for (uint8 i = 0; i < playerAddresses.length; i++) {
                     if (players[playerAddresses[i]].bet > 0 && !players[playerAddresses[i]].finishedActing) {
@@ -139,7 +139,7 @@ contract BlackJack is Game, Deck {
                         break;
                     }
                 }
-                if (actingPlayer == address(0)) dealCards();
+                if (actingPlayer == address(0)) dealerTurn();
             }
         }
         seedsViewed++;
@@ -511,7 +511,7 @@ contract BlackJack is Game, Deck {
             actingPlayer = address(0);
             players[msg.sender].bet = 0;
             for (uint8 i = 0; i < playerAddresses.length; i++) {
-                if (players[playerAddresses[i]].bet > 0) {
+                if (players[playerAddresses[i]].bet > 0 && !players[playerAddresses[i]].finishedActing) {
                     actingPlayer = playerAddresses[i];
                     break;
                 }
@@ -527,7 +527,7 @@ contract BlackJack is Game, Deck {
         players[msg.sender].finishedActing = true;
         actingPlayer = address(0);
         for (uint8 i = 0; i < playerAddresses.length; i++) {
-            if (players[playerAddresses[i]].bet > 0) {
+            if (players[playerAddresses[i]].bet > 0 && !players[playerAddresses[i]].finishedActing) {
                 actingPlayer = playerAddresses[i];
                 break;
             }
