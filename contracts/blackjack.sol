@@ -220,8 +220,8 @@ contract BlackJack is Game, Deck {
 
     function dealCards() internal {
         seedsViewed++;
-        if (totalCards - (12 + playerAddresses.length * 12) < 1)
-            shuffleDeck(numberOfCutCards);
+        if (totalCards - (12 + playerAddresses.length * 12) < 1) shuffleDeck(numberOfCutCards);
+        if (totalCards - (12 + playerAddresses.length * 12) < 1) revert("Not enough cards in the deck");
         rotatePlaces();
         delete dealer.cards;
         dealer.revealed = false;
