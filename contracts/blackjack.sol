@@ -9,7 +9,7 @@ contract BlackJack is Game, Deck {
         address _casino,
         uint8 _numberOfDecks,
         uint16 _numberOfCutCards
-    ) Game(_casino) Deck(_numberOfDecks, numberOfCutCards) {}
+    ) Game(_casino) Deck(_numberOfDecks, _numberOfCutCards) {}
 
     event DealtPlayerCard(address player, uint8 cardNumber, uint8 cardSuit);
     event DealtDealerCard(uint8 cardNumber, uint8 cardSuit);
