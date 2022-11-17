@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.4;
 
-import "./interfaces/coin.sol";
+interface ChipInterface {
+    function mint(address _to, uint256 _amount) external;
+    function burn(address _to, uint256 _amount) external;
+}
 
 contract Casino {
     ChipInterface public chipContract;

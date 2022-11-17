@@ -1,14 +1,14 @@
-const contractName = 'Coin';
-const contractSource = './contracts/casino-coin.sol'
+const contractName = 'BlackJack';
+const contractSource = './contracts/blackjack.sol'
 const runs = 1000
-const constructorArguments = ['Chip', 'CHIP']
+const constructorArguments = ['0x8a3C54067E94Df01653F6Cf6eB33A9d27481Ad1b', '10', '35']
 const fs = require('fs');
 const path = require('path')
 const solc = require('solc');
 const smtchecker = require('solc/smtchecker');
 const smtsolver = require('solc/smtsolver');
 const ethers = require('ethers')
-const { library: provider, wallet: account } = require('./wallet')
+const { provider, wallet } = require('./wallet')
 const input = JSON.stringify({
     language: 'Solidity',
     sources: {
@@ -37,13 +37,13 @@ const { contracts } = output;
 const encodedContract = contracts[contractName];
 const abi = encodedContract[contractName].abi;
 const bytecode = encodedContract[contractName].evm.bytecode.object;
-const factory = new ethers.ContractFactory(abi, bytecode).connect(account)
+const factory = new ethers.ContractFactory(abi, bytecode).connect(wallet)
 !(async () => {
     if (!abi || !bytecode) throw new Error('Missing required')
-    const { gasPrice } = await provider.getBlock('latest').then(block => ({ gasLimit: block.gasLimit, gasPrice: block.baseFeePerGas }))
-    const balance = await provider.getBalance(account.address)
-    const estimate = await account.estimateGas(factory.getDeployTransaction(...constructorArguments))
-    console.log('balance', balance.toString(), 'estimated gas', estimate.toString())
+    const { gasPrice, gasLimit } = await provider.getBlock('latest').then(block => ({ gasLimit: block.gasLimit, gasPrice: block.baseFeePerGas }))
+    const balance = await provider.getBalance(wallet.address)
+    const estimate = await wallet.estimateGas(factory.getDeployTransaction(...constructorArguments))
+    console.log('balance', balance.toString(), 'estimated gas', estimate.toString(), 'gas price', gasPrice.toString(), 'gas limit', gasLimit.toString())
     const contract = await factory.deploy(...constructorArguments, { gasPrice })
     contract.deployTransaction.wait().then(() => {
         console.log('SUCCESSFULLY DEPLOYED NEW CONTRACT AT:', contract.address)
@@ -57,6 +57,6 @@ const factory = new ethers.ContractFactory(abi, bytecode).connect(account)
             console.log('ABI saved!');
         })
     }).catch(e => {
-        console.log(e)
+        console.log('rejected')
     })
 })();
