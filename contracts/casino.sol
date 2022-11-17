@@ -28,7 +28,7 @@ contract Casino {
     }
 
     modifier noReentry {
-        require(members[msg.sender], "You are already a member of the casino.");
+        require(!members[msg.sender], "You are already a member of the casino.");
         _;
     }
 

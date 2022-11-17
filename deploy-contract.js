@@ -1,7 +1,7 @@
-const contractName = 'BlackJack';
-const contractSource = './contracts/blackjack.sol'
+const contractName = 'Casino';
+const contractSource = './contracts/casino.sol'
 const runs = 1000
-const constructorArguments = ['0x8a3C54067E94Df01653F6Cf6eB33A9d27481Ad1b', '10', '35']
+const constructorArguments = ['0xF1688150168dEe7BFAFd7f72b1989fe9E4456652']
 const fs = require('fs');
 const path = require('path')
 const solc = require('solc');

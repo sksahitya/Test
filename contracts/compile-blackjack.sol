@@ -115,7 +115,7 @@ contract Deck {
     }
 
     function nextCard() internal returns (Card memory card) {
-        if (totalCards < 1) revert("No more cards left in the deck.");
+        require(totalCards > 0, "No cards left in deck.");
         card = selectRandomCard();
         while (!notDealt(card.number, card.suit)) card = selectRandomCard();
         dealtCards[card.number][card.suit]++;
@@ -208,12 +208,12 @@ contract BlackJack is Game, Deck {
         uint8 cardSuit2,
         uint8 splitNumber
     );
-    uint48 bettingPeriod = 60 * 10;
-    uint48 lastHandTime;
-    address actingPlayer;
-    uint48 playerActionPeriod = 60 * 5;
-    uint48 lastPlayerActionTime;
-    uint8 playersBet;
+    uint48 public bettingPeriod = 60 * 10;
+    uint48 public lastHandTime;
+    address public actingPlayer;
+    uint48 public playerActionPeriod = 60 * 5;
+    uint48 public lastPlayerActionTime;
+    uint8 public playersBet;
     mapping(address => Player) public players;
     address[] public playerAddresses;
     Dealer public dealer;
@@ -250,15 +250,18 @@ contract BlackJack is Game, Deck {
             for (uint8 i = 0; i < uint8(playerAddresses.length); i++) {
                 if (playerAddresses[i] == actingPlayer) {
                     if (i == playerAddresses.length - 1) {
-                        actingPlayer = playerAddresses[0];
+                        actingPlayer = address(0);
                     } else {
                         actingPlayer = playerAddresses[i + 1];
                     }
                     break;
                 }
             }
+            require(msg.sender == actingPlayer, "It is not your turn to act");
+            if (actingPlayer == address(0)) {
+                dealerTurn();
+            }
         }
-        require(msg.sender == actingPlayer, "It is not your turn to act");
         _;
     }
     modifier onlyPlayers() {
@@ -325,15 +328,11 @@ contract BlackJack is Game, Deck {
 
     function bet(uint48 amount) public onlyPlayers {
         require(players[msg.sender].bet == 0, "You have already bet");
-        require(dealer.revealed, "The round has already started.");
-        require(
-            playersBet < 255,
-            "The maximum number of players has been reached"
-        );
+        require(!dealer.revealed, "The round has already started.");
         takeChips(msg.sender, amount);
         players[msg.sender].bet = amount;
         playersBet++;
-        if (playersBet == playerAddresses.length || playersBet == 255) {
+        if (playersBet == playerAddresses.length) {
             dealCards();
         }
         seedsViewed++;
@@ -355,7 +354,7 @@ contract BlackJack is Game, Deck {
     function moveToNextPlayer() public onlyMembers {
         require(msg.sender != actingPlayer, "It is your turn to act.");
         require(
-            dealer.revealed,
+            !dealer.revealed,
             "The dealer has already revealed their cards."
         );
         require(
@@ -400,10 +399,8 @@ contract BlackJack is Game, Deck {
 
     function dealCards() internal {
         seedsViewed++;
-        if (totalCards - (12 + playerAddresses.length * 12) < 1)
-            shuffleDeck(numberOfCutCards);
-        if (totalCards - (12 + playerAddresses.length * 12) < 1)
-            revert();
+        if (totalCards - (12 + playerAddresses.length * 12) < 1) shuffleDeck(numberOfCutCards);
+        require(totalCards - (12 + playerAddresses.length * 12) > 0);
         rotatePlaces();
         delete dealer.cards;
         dealer.revealed = false;
@@ -902,7 +899,7 @@ contract BlackJack is Game, Deck {
                 }
             }
         }
-        require(cardNumber < 1 || !players[msg.sender].split, "Invalid split");
+        require(cardNumber > 0 || players[msg.sender].split, "Invalid split");
         lastPlayerActionTime = uint48(block.timestamp);
         seedsViewed++;
     }

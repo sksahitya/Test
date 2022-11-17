@@ -64,7 +64,7 @@ contract Deck {
     }
 
     function nextCard() internal returns (Card memory card) {
-        if (totalCards < 1) revert("No more cards left in the deck.");
+        require(totalCards > 0, "No cards left in deck.");
         card = selectRandomCard();
         while (!notDealt(card.number, card.suit)) card = selectRandomCard();
         dealtCards[card.number][card.suit]++;
