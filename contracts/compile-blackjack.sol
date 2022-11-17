@@ -403,7 +403,7 @@ contract BlackJack is Game, Deck {
         if (totalCards - (12 + playerAddresses.length * 12) < 1)
             shuffleDeck(numberOfCutCards);
         if (totalCards - (12 + playerAddresses.length * 12) < 1)
-            revert("Not enough cards in the deck");
+            revert();
         rotatePlaces();
         delete dealer.cards;
         dealer.revealed = false;
