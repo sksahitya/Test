@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
 interface CasinoInterface {
@@ -59,20 +59,19 @@ contract Deck {
         uint8 suit;
         uint8 number;
     }
-    event DeckShuffled(uint16 cutCards, uint48 timestamp);
+    event DeckShuffled(uint48 timestamp);
 
     mapping(uint8 => mapping(uint8 => uint8)) dealtCards;
 
     uint8[] cardNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     uint8[] cardSuits = [1, 2, 3, 4];
     uint8 numberOfDecks;
-    uint16 totalCards = uint16(numberOfDecks * cardSuits.length * cardNumbers.length);
-    uint16 numberOfCutCards;
+    uint16 totalCards;
     uint256 seedsViewed;
 
-    constructor(uint8 _numberOfDecks, uint16 _numberOfCutCards) {
-        numberOfCutCards = _numberOfCutCards;
+    constructor(uint8 _numberOfDecks) {
         numberOfDecks = _numberOfDecks;
+        totalCards = uint16(_numberOfDecks * 52);
     }
 
     function randomSeed() internal returns (uint256) {
@@ -122,7 +121,7 @@ contract Deck {
         totalCards--;
     }
 
-    function shuffleDeck(uint16 cutCount) internal {
+    function shuffleDeck() internal {
         for (uint8 i = 0; i < cardNumbers.length; i++) {
             for (uint8 j = 0; j < cardSuits.length; j++) {
                 dealtCards[cardNumbers[i]][cardSuits[j]] = 0;
@@ -131,8 +130,7 @@ contract Deck {
         totalCards = uint16(
             numberOfDecks * cardSuits.length * cardNumbers.length
         );
-        for (uint16 i = 0; i < cutCount; i++) nextCard();
-        emit DeckShuffled(cutCount, uint48(block.timestamp));
+        emit DeckShuffled(uint48(block.timestamp));
     }
 
 }
@@ -140,9 +138,8 @@ contract Deck {
 contract BlackJack is Game, Deck {
     constructor(
         address _casino,
-        uint8 _numberOfDecks,
-        uint16 _numberOfCutCards
-    ) Game(_casino) Deck(_numberOfDecks, _numberOfCutCards) {}
+        uint8 _numberOfDecks
+    ) Game(_casino) Deck(_numberOfDecks) {}
 
     event DealtPlayerCard(
         address player,
@@ -277,12 +274,12 @@ contract BlackJack is Game, Deck {
         playerActionPeriod = _playerActionPeriod;
     }
 
-    function setDeckParameters(uint8 _numberOfDecks, uint16 _numberOfCutCards)
+    function setNumberOfDecks(uint8 _numberOfDecks)
         external
         onlyOwner
     {
         numberOfDecks = _numberOfDecks;
-        numberOfCutCards = _numberOfCutCards;
+        shuffleDeck();
     }
 
     function joinTable() public onlyMembers {
@@ -388,20 +385,9 @@ contract BlackJack is Game, Deck {
         }
     }
 
-    function rotatePlaces() internal {
-        address c = playerAddresses[0];
-        for (uint8 i = uint8(playerAddresses.length) - 1; i >= 0 ; i--) {
-            playerAddresses[i] = i == uint8(playerAddresses.length) - 1
-                ? c
-                : playerAddresses[i];
-        }
-    }
-
     function dealCards() internal {
-        seedsViewed++;
-        if (totalCards - (12 + playerAddresses.length * 12) < 1) shuffleDeck(numberOfCutCards);
+        if (totalCards - (12 + playerAddresses.length * 12) < 1) shuffleDeck();
         require(totalCards - (12 + playerAddresses.length * 12) > 0);
-        rotatePlaces();
         delete dealer.cards;
         dealer.revealed = false;
         for (uint8 i = 0; i < uint8(playerAddresses.length); i++) {
@@ -464,17 +450,10 @@ contract BlackJack is Game, Deck {
         }
         for (uint8 i; i < uint8(playerAddresses.length); i++) {
             if (players[playerAddresses[i]].bet > 0) {
-                uint8 cardTotal;
-                for (
-                    uint8 j = 0;
-                    j < uint8(players[playerAddresses[i]].cards.length);
-                    j++
-                ) {
-                    cardTotal += players[playerAddresses[i]]
-                        .cards[j]
-                        .card
-                        .number;
-                }
+                uint8 cardTotal = playerCardsTotal(
+                    players[playerAddresses[i]].cards,
+                    0
+                );
                 if (dealerBlackjack) {
                     if (
                         (players[playerAddresses[i]].cards[0].card.number ==
@@ -623,6 +602,7 @@ contract BlackJack is Game, Deck {
         } else {
             emit DealerStand(dealerCardTotal, uint8(dealer.cards.length));
         }
+        address firstPlayer = address(playerAddresses[playerAddresses.length - 1]);
         for (uint8 i = 0; i < uint8(playerAddresses.length); i++) {
             if (players[playerAddresses[i]].bet > 0) {
                 for (
@@ -692,6 +672,11 @@ contract BlackJack is Game, Deck {
                     }
                 }
                 players[playerAddresses[i]].bet = 0;
+                if (i == playerAddresses.length - 1) {
+                    playerAddresses[i] = firstPlayer;
+                } else {
+                    playerAddresses[i] = playerAddresses[i + 1];
+                }
             }
         }
         lastHandTime = uint48(block.timestamp);
