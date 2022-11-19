@@ -193,7 +193,7 @@ contract BlackJack is Game, Deck {
         seedsViewed++;
     }
 
-    function bet(uint48 amount) public onlyPlayers {
+    function bet(uint48 amount) external onlyPlayers {
         require(players[msg.sender].bet == 0, "You have already bet");
         require(!dealer.revealed, "The round has already started.");
         takeChips(msg.sender, amount);
@@ -205,7 +205,7 @@ contract BlackJack is Game, Deck {
         seedsViewed++;
     }
 
-    function startTheHand() public onlyMembers {
+    function startTheHand() external onlyMembers {
         require(
             block.timestamp - lastHandTime + bettingPeriod > 0,
             "The betting period has not ended"
@@ -218,7 +218,7 @@ contract BlackJack is Game, Deck {
         dealCards();
     }
 
-    function moveToNextPlayer() public onlyMembers {
+    function moveToNextPlayer() external onlyMembers {
         require(msg.sender != actingPlayer, "It is your turn to act.");
         require(
             !dealer.revealed,
@@ -565,7 +565,7 @@ contract BlackJack is Game, Deck {
         playersBet = 0;
     }
 
-    function hit() public turnToAct {
+    function hit() external turnToAct {
         Card memory next = nextCard();
         players[msg.sender].cards.push(
             PlayerCard({
@@ -630,7 +630,7 @@ contract BlackJack is Game, Deck {
         seedsViewed++;
     }
 
-    function stand() public turnToAct {
+    function stand() external turnToAct {
         if (
             players[msg.sender].splitNumber <
             players[msg.sender].highestSplitNumber
@@ -656,7 +656,7 @@ contract BlackJack is Game, Deck {
         seedsViewed++;
     }
 
-    function doubleDown() public turnToAct {
+    function doubleDown() external turnToAct {
         require(
             players[msg.sender].cards.length == 2,
             "You can only double down on your first two cards"
@@ -702,7 +702,7 @@ contract BlackJack is Game, Deck {
         seedsViewed++;
     }
 
-    function split() public turnToAct {
+    function split() external turnToAct {
         uint8 cardNumber;
         uint8 cardSuit;
         takeChips(msg.sender, players[msg.sender].bet / players[msg.sender].highestSplitNumber);
