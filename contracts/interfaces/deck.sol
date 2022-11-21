@@ -1,48 +1,57 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.4;
 
-
 contract Deck {
-    
     struct Card {
         uint8 suit;
         uint8 number;
     }
-    event DeckShuffled(uint16 cutCards, uint48 timestamp);
+    event DeckShuffled(uint48 timestamp);
 
     mapping(uint8 => mapping(uint8 => uint8)) dealtCards;
 
-    uint8[] cardNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-    uint8[] cardSuits = [1, 2, 3, 4];
+    uint8[13] cardNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    uint8[4] cardSuits = [1, 2, 3, 4];
     uint8 numberOfDecks;
-    uint16 totalCards = uint16(numberOfDecks * cardSuits.length * cardNumbers.length);
-    uint16 numberOfCutCards;
+    uint16 totalCards;
     uint256 seedsViewed;
+    uint256 seed;
+    uint256 lastSeedStamp;
 
-    constructor(uint8 _numberOfDecks, uint16 _numberOfCutCards) {
-        numberOfCutCards = _numberOfCutCards;
+    constructor(uint8 _numberOfDecks) {
         numberOfDecks = _numberOfDecks;
+        totalCards = uint16(
+            numberOfDecks * 52
+        );
     }
 
     function randomSeed() internal returns (uint256) {
-        uint256 seed = uint256(
-            keccak256(
-                abi.encodePacked(
-                    block.timestamp +
-                        block.difficulty +
-                        ((
-                            uint256(keccak256(abi.encodePacked(block.coinbase)))
-                        ) / (block.timestamp)) +
-                        block.gaslimit +
-                        ((uint256(keccak256(abi.encodePacked(msg.sender)))) /
-                            (block.timestamp)) +
-                        block.number +
-                        seedsViewed
+        if (block.timestamp != lastSeedStamp) {
+            seed = uint256(
+                keccak256(
+                    abi.encodePacked(
+                        block.timestamp +
+                            block.difficulty +
+                            ((
+                                uint256(
+                                    keccak256(abi.encodePacked(block.coinbase))
+                                )
+                            ) / (block.timestamp)) +
+                            block.gaslimit +
+                            ((
+                                uint256(keccak256(abi.encodePacked(msg.sender)))
+                            ) / (block.timestamp)) +
+                            block.number +
+                            seedsViewed
+                    )
                 )
-            )
-        );
+            );
+            lastSeedStamp = block.timestamp;
+        }
         seedsViewed++;
-        return ((seed - ((seed / 1000) * 1000)));
+        return (
+            ((seed + seedsViewed) - (((seed + seedsViewed) / 1000) * 1000))
+        );
     }
 
     function randomCardNumber() internal returns (uint8) {
@@ -64,24 +73,22 @@ contract Deck {
     }
 
     function nextCard() internal returns (Card memory card) {
-        require(totalCards > 0, "No cards left in deck.");
         card = selectRandomCard();
-        while (!notDealt(card.number, card.suit)) card = selectRandomCard();
+        if (!notDealt(card.number, card.suit))
+            while (!notDealt(card.number, card.suit)) card = selectRandomCard();
         dealtCards[card.number][card.suit]++;
         totalCards--;
     }
 
-    function shuffleDeck(uint16 cutCount) internal {
-        for (uint8 i = 0; i < cardNumbers.length; i++) {
-            for (uint8 j = 0; j < cardSuits.length; j++) {
+    function shuffleDeck() internal {
+        for (uint8 i = 0; i < 13; i++) {
+            for (uint8 j = 0; j < 4; j++) {
                 dealtCards[cardNumbers[i]][cardSuits[j]] = 0;
             }
         }
         totalCards = uint16(
-            numberOfDecks * cardSuits.length * cardNumbers.length
+            numberOfDecks * 52
         );
-        for (uint16 i = 0; i < cutCount; i++) nextCard();
-        emit DeckShuffled(cutCount, uint48(block.timestamp));
+        emit DeckShuffled(uint48(block.timestamp));
     }
-
 }

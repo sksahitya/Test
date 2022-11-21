@@ -21,9 +21,6 @@ contract Game {
 
     address payable owner;
 
-    event ChipsGiven(address indexed user, uint48 amount, uint48 timestamp);
-    event ChipsTaken(address indexed user, uint48 amount, uint48 timestamp);
-
     constructor(address _casino) {
         casino = CasinoInterface(_casino);
         owner = payable(msg.sender);
@@ -52,12 +49,10 @@ contract Game {
 
     function payout(address to, uint48 amount) internal {
         casino.giveChips(to, amount);
-        emit ChipsGiven(to, amount, uint48(block.timestamp));
     }
 
     function takeChips(address from, uint48 amount) internal {
         casino.takeChips(from, amount);
-        emit ChipsTaken(from, amount, uint48(block.timestamp));
     }
 }
 
@@ -70,8 +65,8 @@ contract Deck {
 
     mapping(uint8 => mapping(uint8 => uint8)) dealtCards;
 
-    uint8[] cardNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-    uint8[] cardSuits = [1, 2, 3, 4];
+    uint8[13] cardNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    uint8[4] cardSuits = [1, 2, 3, 4];
     uint8 numberOfDecks;
     uint16 totalCards;
     uint256 seedsViewed;
@@ -81,7 +76,7 @@ contract Deck {
     constructor(uint8 _numberOfDecks) {
         numberOfDecks = _numberOfDecks;
         totalCards = uint16(
-            numberOfDecks * cardSuits.length * cardNumbers.length
+            numberOfDecks * 52
         );
     }
 
@@ -141,13 +136,13 @@ contract Deck {
     }
 
     function shuffleDeck() internal {
-        for (uint8 i = 0; i < cardNumbers.length; i++) {
-            for (uint8 j = 0; j < cardSuits.length; j++) {
+        for (uint8 i = 0; i < 13; i++) {
+            for (uint8 j = 0; j < 4; j++) {
                 dealtCards[cardNumbers[i]][cardSuits[j]] = 0;
             }
         }
         totalCards = uint16(
-            numberOfDecks * cardSuits.length * cardNumbers.length
+            numberOfDecks * 52
         );
         emit DeckShuffled(uint48(block.timestamp));
     }
