@@ -247,7 +247,6 @@ contract BlackJack is Game, Deck {
         uint48 bet;
         PlayerCard[] cards;
         bool doubledDown;
-        bool split;
         uint8 highestSplitNumber;
         uint8 splitNumber;
         bool finishedActing;
@@ -400,17 +399,13 @@ contract BlackJack is Game, Deck {
     }
 
     function dealCards() internal {
+        if (numberOfDecks * 52 - (12 + playerAddresses.length * 12) < 1) while (numberOfDecks * 52 - (12 + playerAddresses.length * 12) < 1) numberOfDecks++;
         if (totalCards - (12 + playerAddresses.length * 12) < 1) shuffleDeck();
-        require(
-            totalCards - (12 + playerAddresses.length * 12) > 0,
-            "Invalid deck size, add more decks."
-        );
         delete dealer.cards;
         dealer.revealed = false;
         for (uint8 i = 0; i < uint8(playerAddresses.length); i++) {
             delete players[playerAddresses[i]].cards;
             players[playerAddresses[i]].doubledDown = false;
-            players[playerAddresses[i]].split = false;
             players[playerAddresses[i]].highestSplitNumber = 0;
             players[playerAddresses[i]].splitNumber = 0;
             players[playerAddresses[i]].finishedActing = false;
@@ -609,9 +604,9 @@ contract BlackJack is Game, Deck {
                         z
                     );
                     if (dealerCardTotal > 21) {
-                        uint48 winnings = players[playerAddresses[i]].split
+                        uint48 winnings = players[playerAddresses[i]].highestSplitNumber > 0
                             ? (players[playerAddresses[i]].bet /
-                                players[playerAddresses[i]].splitNumber) * 2
+                                (players[playerAddresses[i]].highestSplitNumber+1)) * 2
                             : players[playerAddresses[i]].bet * 2;
                         payout(playerAddresses[i], winnings);
                         emit PlayerWin(
@@ -623,9 +618,9 @@ contract BlackJack is Game, Deck {
                         );
                     } else {
                         if (cardTotal > dealerCardTotal) {
-                            uint48 winnings = players[playerAddresses[i]].split
+                            uint48 winnings = players[playerAddresses[i]].highestSplitNumber > 0
                                 ? (players[playerAddresses[i]].bet /
-                                    players[playerAddresses[i]].splitNumber) * 2
+                                    (players[playerAddresses[i]].highestSplitNumber+1)) * 2
                                 : players[playerAddresses[i]].bet * 2;
                             payout(playerAddresses[i], winnings);
                             emit PlayerWin(
@@ -638,9 +633,9 @@ contract BlackJack is Game, Deck {
                         } else if (cardTotal == dealerCardTotal) {
                             payout(
                                 playerAddresses[i],
-                                players[playerAddresses[i]].split
+                                players[playerAddresses[i]].highestSplitNumber > 0
                                     ? (players[playerAddresses[i]].bet /
-                                        players[playerAddresses[i]].splitNumber)
+                                        (players[playerAddresses[i]].highestSplitNumber+1))
                                     : players[playerAddresses[i]].bet
                             );
                             emit PlayerPush(
@@ -838,7 +833,6 @@ contract BlackJack is Game, Deck {
                         cardNumber = players[msg.sender].cards[i].card.number;
                         cardSuit = players[msg.sender].cards[i].card.suit;
                     } else {
-                        players[msg.sender].split = true;
                         emit PlayerSplit(
                             msg.sender,
                             cardNumber,
@@ -885,7 +879,7 @@ contract BlackJack is Game, Deck {
                 }
             }
         }
-        require(cardNumber > 0 || players[msg.sender].split, "Invalid split");
+        require(cardNumber > 0, "Invalid split");
         lastPlayerActionTime = uint48(block.timestamp);
         seedsViewed++;
     }
