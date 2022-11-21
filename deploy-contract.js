@@ -1,7 +1,7 @@
-const contractName = 'Casino';
-const contractSource = './contracts/casino.sol'
+const contractName = 'BlackJack';
+const contractSource = './contracts/compile-blackjack.sol'
 const runs = 1000
-const constructorArguments = ['0xF1688150168dEe7BFAFd7f72b1989fe9E4456652']
+const constructorArguments = ['0xF52137bc13D3C4cD9E0f8a64Dd44Ac34AFF23FD4', '20']
 const fs = require('fs');
 const path = require('path')
 const solc = require('solc');
@@ -44,6 +44,7 @@ const factory = new ethers.ContractFactory(abi, bytecode).connect(wallet)
     const balance = await provider.getBalance(wallet.address)
     const estimate = await wallet.estimateGas(factory.getDeployTransaction(...constructorArguments))
     console.log('balance', balance.toString(), 'estimated gas', estimate.toString(), 'gas price', gasPrice.toString(), 'gas limit', gasLimit.toString())
+    if (estimate.toNumber() > 9262437) throw new Error('Gas is too high')
     const contract = await factory.deploy(...constructorArguments, { gasPrice })
     contract.deployTransaction.wait().then(() => {
         console.log('SUCCESSFULLY DEPLOYED NEW CONTRACT AT:', contract.address)
