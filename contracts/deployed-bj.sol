@@ -1,3 +1,11 @@
+/**
+ *Submitted for verification at Etherscan.io on 2022-11-21
+ */
+
+/**
+ *Submitted for verification at Etherscan.io on 2022-11-18
+ */
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
@@ -16,6 +24,9 @@ contract Game {
     CasinoInterface public casino;
 
     address payable owner;
+
+    event ChipsGiven(address indexed user, uint48 amount, uint48 timestamp);
+    event ChipsTaken(address indexed user, uint48 amount, uint48 timestamp);
 
     constructor(address _casino) {
         casino = CasinoInterface(_casino);
@@ -45,10 +56,12 @@ contract Game {
 
     function payout(address to, uint48 amount) internal {
         casino.giveChips(to, amount);
+        emit ChipsGiven(to, amount, uint48(block.timestamp));
     }
 
     function takeChips(address from, uint48 amount) internal {
         casino.takeChips(from, amount);
+        emit ChipsTaken(from, amount, uint48(block.timestamp));
     }
 }
 
@@ -72,7 +85,7 @@ contract Deck {
     constructor(uint8 _numberOfDecks) {
         numberOfDecks = _numberOfDecks;
         totalCards = uint16(
-            numberOfDecks * cardNumbers.length * cardSuits.length
+            numberOfDecks * cardSuits.length * cardNumbers.length
         );
     }
 
@@ -132,13 +145,13 @@ contract Deck {
     }
 
     function shuffleDeck() internal {
-        for (uint8 i = 0; i < uint8(cardNumbers.length); i++) {
-            for (uint8 j = 0; j < uint8(cardSuits.length); j++) {
+        for (uint8 i = 0; i < cardNumbers.length; i++) {
+            for (uint8 j = 0; j < cardSuits.length; j++) {
                 dealtCards[cardNumbers[i]][cardSuits[j]] = 0;
             }
         }
         totalCards = uint16(
-            numberOfDecks * cardNumbers.length * cardSuits.length
+            numberOfDecks * cardSuits.length * cardNumbers.length
         );
         emit DeckShuffled(uint48(block.timestamp));
     }
@@ -391,6 +404,10 @@ contract BlackJack is Game, Deck {
 
     function dealCards() internal {
         if (totalCards - (12 + playerAddresses.length * 12) < 1) shuffleDeck();
+        require(
+            totalCards - (12 + playerAddresses.length * 12) > 0,
+            "Invalid deck size, add more decks."
+        );
         delete dealer.cards;
         dealer.revealed = false;
         for (uint8 i = 0; i < uint8(playerAddresses.length); i++) {
@@ -510,16 +527,15 @@ contract BlackJack is Game, Deck {
                 cardTotal += cards[i].number < 10 ? cards[i].number : 10;
             }
         }
-        if (aceCount > 0) {
+        if (aceCount > 0)
             while (aceCount > 0) {
                 if (cardTotal + 11 <= 21) {
                     cardTotal += 11;
                 } else {
                     cardTotal++;
                 }
-            aceCount--;
-        }
-        }
+                aceCount--;
+            }
     }
 
     function playerCardsTotal(PlayerCard[] memory cards, uint8 splitToPlay)
@@ -539,16 +555,15 @@ contract BlackJack is Game, Deck {
                 }
             }
         }
-        if (aceCount > 0) {
+        if (aceCount > 0)
             while (aceCount > 0) {
                 if (cardTotal + 11 <= 21) {
                     cardTotal += 11;
                 } else {
                     cardTotal++;
                 }
-            aceCount--;
-        }
-        }
+                aceCount--;
+            }
     }
 
     function cardsOfSplit(PlayerCard[] memory cards, uint8 splitToPlay)
@@ -568,12 +583,13 @@ contract BlackJack is Game, Deck {
         emit DealerRevealedCard(dealerUnrevealed.number, dealerUnrevealed.suit);
         dealer.cards.push(dealerUnrevealed);
         uint8 dealerCardTotal = cardsTotal(dealer.cards);
-        if (dealerCardTotal < 17) while (dealerCardTotal < 17) {
-            Card memory next = nextCard();
-            dealer.cards.push(next);
-            emit DealtDealerCard(next.number, next.suit);
-            dealerCardTotal = cardsTotal(dealer.cards);
-        }
+        if (dealerCardTotal < 17)
+            while (dealerCardTotal < 17) {
+                Card memory next = nextCard();
+                dealer.cards.push(next);
+                emit DealtDealerCard(next.number, next.suit);
+                dealerCardTotal = cardsTotal(dealer.cards);
+            }
         if (dealerCardTotal > 21) {
             emit DealerBust(dealerCardTotal, uint8(dealer.cards.length));
         } else {
@@ -598,7 +614,12 @@ contract BlackJack is Game, Deck {
                         z
                     );
                     if (dealerCardTotal > 21) {
-                        uint48 winnings = (players[playerAddresses[i]].highestSplitNumber > 0) ? (players[playerAddresses[i]].bet / (players[playerAddresses[i]].highestSplitNumber+1)) * 2 : players[playerAddresses[i]].bet * 2;
+                        uint48 winnings = players[playerAddresses[i]]
+                            .highestSplitNumber > 0
+                            ? (players[playerAddresses[i]].bet /
+                                (players[playerAddresses[i]]
+                                    .highestSplitNumber + 1)) * 2
+                            : players[playerAddresses[i]].bet * 2;
                         payout(playerAddresses[i], winnings);
                         emit PlayerWin(
                             playerAddresses[i],
@@ -609,7 +630,12 @@ contract BlackJack is Game, Deck {
                         );
                     } else {
                         if (cardTotal > dealerCardTotal) {
-                            uint48 winnings = (players[playerAddresses[i]].highestSplitNumber > 0) ? (players[playerAddresses[i]].bet / (players[playerAddresses[i]].highestSplitNumber+1)) * 2 : players[playerAddresses[i]].bet * 2;
+                            uint48 winnings = players[playerAddresses[i]]
+                                .highestSplitNumber > 0
+                                ? (players[playerAddresses[i]].bet /
+                                    (players[playerAddresses[i]]
+                                        .highestSplitNumber + 1)) * 2
+                                : players[playerAddresses[i]].bet * 2;
                             payout(playerAddresses[i], winnings);
                             emit PlayerWin(
                                 playerAddresses[i],
@@ -621,7 +647,12 @@ contract BlackJack is Game, Deck {
                         } else if (cardTotal == dealerCardTotal) {
                             payout(
                                 playerAddresses[i],
-                                (players[playerAddresses[i]].highestSplitNumber > 0) ? (players[playerAddresses[i]].bet / (players[playerAddresses[i]].highestSplitNumber+1)) : players[playerAddresses[i]].bet
+                                players[playerAddresses[i]].highestSplitNumber >
+                                    0
+                                    ? (players[playerAddresses[i]].bet /
+                                        (players[playerAddresses[i]]
+                                            .highestSplitNumber + 1))
+                                    : players[playerAddresses[i]].bet
                             );
                             emit PlayerPush(
                                 playerAddresses[i],
@@ -724,9 +755,20 @@ contract BlackJack is Game, Deck {
     }
 
     function stand() public turnToAct {
-        uint8 cardCount = cardsOfSplit(players[msg.sender].cards, players[msg.sender].splitNumber);
-        uint8 cardTotal = playerCardsTotal(players[msg.sender].cards, players[msg.sender].splitNumber);
-        emit PlayerStand(msg.sender, cardTotal, cardCount, players[msg.sender].splitNumber);
+        uint8 cardCount = cardsOfSplit(
+            players[msg.sender].cards,
+            players[msg.sender].splitNumber
+        );
+        uint8 cardTotal = playerCardsTotal(
+            players[msg.sender].cards,
+            players[msg.sender].splitNumber
+        );
+        emit PlayerStand(
+            msg.sender,
+            cardTotal,
+            cardCount,
+            players[msg.sender].splitNumber
+        );
         if (
             players[msg.sender].splitNumber <
             players[msg.sender].highestSplitNumber

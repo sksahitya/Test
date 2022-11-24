@@ -41,19 +41,20 @@
     "css-loader": "^6.7.1",
     "eslint": "^8.20.0",
     "eslint-plugin-jest": "^26.6.0",
+    "form-data": "^4.0.0",
     "html-webpack-plugin": "^5.5.0",
     "https-browserify": "^1.0.0",
     "mini-css-extract-plugin": "^2.6.0",
     "os-browserify": "^0.3.0",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
+    "solc": "^0.8.17",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "url": "^0.11.0",
     "web3": "^1.8.1",
     "webpack": "^5.72.0",
-    "webpack-dev-server": "^4.8.1",
-    "solc": "^0.8.17"
+    "webpack-dev-server": "^4.8.1"
   }
 }

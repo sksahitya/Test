@@ -1,19 +1,22 @@
-const contractName = 'BlackJack';
-const contractSource = './contracts/compile-blackjack.sol'
-const runs = 1000
-const constructorArguments = ['0xF52137bc13D3C4cD9E0f8a64Dd44Ac34AFF23FD4', '20']
+const CONF = require('@ideadesignmedia/config.js')
 const fs = require('fs');
 const path = require('path')
 const solc = require('solc');
 const smtchecker = require('solc/smtchecker');
 const smtsolver = require('solc/smtsolver');
 const ethers = require('ethers')
+const FormData = require('form-data');
+const contractName = 'BlackJack';
+const contractSource = './contracts/compile-blackjack.sol'
+const sourceCode = fs.readFileSync(contractSource, 'utf8')
+const runs = 1000
+const constructorArguments = ['0xF52137bc13D3C4cD9E0f8a64Dd44Ac34AFF23FD4', '20']
 const { provider, wallet } = require('./wallet')
 const input = JSON.stringify({
     language: 'Solidity',
     sources: {
         [contractName]: {
-            content: fs.readFileSync(contractSource, 'utf8'),
+            content: sourceCode,
         },
     },
     settings: {
@@ -33,6 +36,7 @@ function findImports(relativePath) {
 }
 const output = JSON.parse(solc.compile(input, { import: findImports, smtSolver: smtchecker.smtCallback(smtsolver.smtSolver, smtsolver.availableSolvers[0]) }));
 if (output.errors && output.errors.length) throw console.log(output.errors)
+console.log('Compiled contract without errors')
 const { contracts } = output;
 const encodedContract = contracts[contractName];
 const abi = encodedContract[contractName].abi;
@@ -57,7 +61,33 @@ const factory = new ethers.ContractFactory(abi, bytecode).connect(wallet)
             if (err) return console.log(err);
             console.log('ABI saved!');
         })
+        try {
+            const verifyData = new FormData()
+            const data = {
+                apikey: process.env.ETHERSCAN_API_KEY,
+                module: 'contract',
+                action: 'verifysourcecode',
+                contractaddress: contract.address,
+                sourceCode,
+                contractname: contractName,
+                compilerversion: 'v0.8.17+commit.8df45f5f',
+                optimizationUsed: '1',
+                runs: runs.toString(),
+                constructorArguments: constructorArguments.join(','),
+                licenseType: '5'
+            }
+            for (const key in data) {
+                verifyData.append(key, data[key])
+            }
+            console.log('Verifying contract on Etherscan')
+            verifyData.submit('https://api-goerli.etherscan.io/', (err, resp) => {
+                if (err) return console.log(`Failed to verify contract:`, err)
+                console.log(`Successfully verified contract:`, resp)
+            })
+        } catch(e) {
+            console.log(e)
+        }
     }).catch(e => {
-        console.log('rejected')
+        console.log('rejected', e)
     })
 })();

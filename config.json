@@ -4,5 +4,6 @@
     "UPLOADAUTH": "Easy",
     "static": "./static",
     "PRIVATE_KEY": "broken aware pistol spare remind short column enlist radio debris whisper tower",
-    "RPC_URI": "https://goerli.infura.io/v3/fc9c5693af6d40afa0e8ef96d95bf69d"
+    "RPC_URI": "https://goerli.infura.io/v3/fc9c5693af6d40afa0e8ef96d95bf69d",
+    "ETHSCAN_API_KEY": "WYHPFDHQRZ5C7HQZGZ7F7DZACS34A249M7"
 }
