@@ -1,0 +1,9 @@
+{
+    "PORT": 3333,
+    "HOST": "testing.samwagnermedia.com",
+    "UPLOADAUTH": "Easy",
+    "static": "./static",
+    "STATIC": "./static",
+    "PRIVATE_KEY": "",
+    "RPC_URI": ""
+}
