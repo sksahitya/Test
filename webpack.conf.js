@@ -22,6 +22,19 @@ module.exports = {
                 test: /.(sa|sc|c)ss$/i,
                 use: [MiniCssExtractPlugin.loader, "css-loader",],
             },
+            {
+                test: /\.(?:js|mjs|cjs)$/,
+                exclude: /node_modules/,
+                use: {
+                  loader: 'babel-loader',
+                  options: {
+                    presets: [
+                      ['@babel/preset-env', { targets: "defaults" }]
+                    ],
+                    cacheDirectory: true,
+                  }
+                }
+              }
         ],
     },
     plugins: [new HtmlWebpackPlugin(htmlOptions), new MiniCssExtractPlugin(), new CompressionPlugin()],
@@ -38,6 +51,10 @@ module.exports = {
                 }
             })
         ],
+        mangleExports: 'size',
+        mergeDuplicateChunks: true,
+        minimize: true,
+        
     },
     devtool: "eval-cheap-source-map",
     devServer: {

@@ -123,7 +123,7 @@ export const Web3Provider = () => {
     if (walletConnector) connect(walletConnector).catch(e => console.log(e))
     return { account, chainId, provider, connect, disconnect }
 }
-export default useWeb3
+
 export const getProvider = (unsigned) => {
     if (unsigned) return new ethers.providers.StaticJsonRpcProvider(env.rpc())
     const walletConnector = localStorage.getItem(env.walletConnectKey) ?? undefined
@@ -595,3 +595,4 @@ export const intoBigNumber = (big, decimals = 18) => {
     if (r.isNaN()) return '0'
     return r.absoluteValue().toString()
 }
+export default Web3Provider
